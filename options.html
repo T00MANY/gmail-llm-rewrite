@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Gmail LLM Rewrite — ustawienia</title>
+<style>
+  body { font-family: 'Google Sans', Roboto, system-ui, sans-serif; max-width: 560px; margin: 40px auto; padding: 0 20px; color: #202124; }
+  h1 { font-size: 22px; font-weight: 500; margin-bottom: 6px; }
+  .sub { color: #5f6368; font-size: 14px; margin-bottom: 24px; }
+  label { display: block; font-size: 13px; color: #5f6368; margin-top: 18px; margin-bottom: 6px; }
+  input, select { width: 100%; padding: 10px 12px; border: 1px solid #dadce0; border-radius: 6px; font-size: 14px; box-sizing: border-box; font-family: inherit; }
+  input:focus, select:focus { outline: none; border-color: #1a73e8; box-shadow: 0 0 0 1px #1a73e8; }
+  .row { display: flex; gap: 12px; margin-top: 24px; align-items: center; }
+  button { padding: 10px 20px; background: #1a73e8; color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; }
+  button:hover { background: #1967d2; }
+  button.secondary { background: #fff; color: #1a73e8; border: 1px solid #dadce0; }
+  button.secondary:hover { background: #f1f3f4; }
+  .status { font-size: 13px; color: #137333; }
+  .status.err { color: #c5221f; }
+  .hint { font-size: 12px; color: #80868b; margin-top: 4px; }
+</style>
+</head>
+<body>
+  <h1>Gmail LLM Rewrite</h1>
+  <div class="sub">Popraw szkice odpowiedzi w Gmailu przez MiniMax</div>
+
+  <label for="apiKey">Klucz API MiniMax</label>
+  <input type="password" id="apiKey" placeholder="wklej klucz API" autocomplete="off">
+  <div class="hint">Przechowywany wyłącznie lokalnie (<code>chrome.storage.local</code>), nie jest syncowany między urządzeniami.</div>
+
+  <label for="baseUrl">Endpoint (base URL)</label>
+  <input type="text" id="baseUrl" placeholder="https://api.minimax.io/v1">
+
+  <label for="model">Model</label>
+  <input type="text" id="model" placeholder="MiniMax-M2.5">
+
+  <label for="defaultTone">Domyślny ton (klik w przycisk bez wyboru z menu)</label>
+  <select id="defaultTone">
+    <option value="professional">Formalny biznesowy</option>
+    <option value="direct">Bezpośredni</option>
+    <option value="friendly">Przyjazny</option>
+    <option value="apologetic">Przepraszający</option>
+  </select>
+
+  <div class="row">
+    <button id="save">Zapisz</button>
+    <button id="test" class="secondary" type="button">Testuj połączenie</button>
+    <span class="status" id="status"></span>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

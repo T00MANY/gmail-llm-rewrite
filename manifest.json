@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Gmail LLM Rewrite (MiniMax)",
+  "version": "0.1.0",
+  "description": "Popraw szkic odpowiedzi w Gmailu jednym klikiem przez MiniMax.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://mail.google.com/*",
+    "https://api.minimax.io/*",
+    "https://api.minimaxi.com/*",
+    "https://api.minimax.chat/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "action": {
+    "default_title": "Gmail LLM Rewrite — ustawienia"
+  }
+}
