@@ -4,6 +4,7 @@ const DEFAULTS = {
   baseUrl: 'https://api.minimax.io/v1',
   model: 'MiniMax-M2.7',
   defaultTone: 'professional',
+  buttonLabel: '✨ Rewrite',
 };
 
 function setStatus(text, isError = false) {
@@ -19,6 +20,7 @@ function load() {
     $('baseUrl').value = d.baseUrl;
     $('model').value = d.model;
     $('defaultTone').value = d.defaultTone;
+    $('buttonLabel').value = d.buttonLabel;
   });
 }
 
@@ -28,6 +30,7 @@ function save() {
     baseUrl: $('baseUrl').value.trim() || DEFAULTS.baseUrl,
     model: $('model').value.trim() || DEFAULTS.model,
     defaultTone: $('defaultTone').value,
+    buttonLabel: $('buttonLabel').value.trim() || DEFAULTS.buttonLabel,
   };
   chrome.storage.local.set(cfg, () => setStatus('Zapisano ✓'));
 }

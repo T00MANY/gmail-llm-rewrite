@@ -2,6 +2,7 @@
   const LOG = (...a) => console.log('[gmail-llm]', ...a);
   const WARN = (...a) => console.warn('[gmail-llm]', ...a);
   const INJECTED_ATTR = 'data-llm-rewrite-injected';
+  const DEFAULT_LABEL = '✨ Rewrite';
 
   const SEND_WORDS = ['send', 'wyślij', 'wyslij', 'senden', 'odeslat', 'odoslať', 'odoslat', 'envoyer', 'inviar', 'enviar', 'invia'];
   const SCHEDULE_WORDS = ['schedule', 'planuj', 'zaplanuj', 'planen', 'später'];
@@ -12,6 +13,19 @@
     friendly: 'Przyjazny',
     apologetic: 'Przepraszam',
   };
+
+  let buttonLabel = DEFAULT_LABEL;
+  chrome.storage.local.get({ buttonLabel: DEFAULT_LABEL }, ({ buttonLabel: bl }) => {
+    buttonLabel = bl || DEFAULT_LABEL;
+    document.querySelectorAll('.llm-rewrite-main').forEach(el => { el.textContent = buttonLabel; });
+  });
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local' || !changes.buttonLabel) return;
+    buttonLabel = changes.buttonLabel.newValue || DEFAULT_LABEL;
+    document.querySelectorAll('.llm-rewrite-main').forEach(el => {
+      if (!el.dataset.llmBusy) el.textContent = buttonLabel;
+    });
+  });
 
   LOG('content script loaded', location.href);
 
@@ -109,7 +123,7 @@
     main.setAttribute('role', 'button');
     main.setAttribute('tabindex', '0');
     main.className = 'llm-rewrite-main';
-    main.textContent = '✨ Popraw';
+    main.textContent = buttonLabel;
     Object.assign(main.style, {
       display: 'inline-flex',
       alignItems: 'center',
@@ -340,10 +354,17 @@
     const threadContext = extractThreadContext(container);
     if (!draft && !threadContext) { flash(btn, 'Brak treści i wątku'); return; }
 
-    const originalText = btn.textContent;
+    btn.dataset.llmBusy = '1';
     btn.textContent = `⏳ ${TONE_LABELS[tone] || ''}…`;
     btn.style.opacity = '0.75';
     btn.style.pointerEvents = 'none';
+
+    const restore = (text) => {
+      delete btn.dataset.llmBusy;
+      btn.textContent = text;
+      btn.style.opacity = '1';
+      btn.style.pointerEvents = '';
+    };
 
     const payload = {
       type: 'rewrite',
@@ -358,25 +379,17 @@
       if (!response || response.error) {
         WARN('rewrite error:', response && response.error);
         flash(btn, '❌ ' + ((response && response.error) || 'błąd'));
-        btn.textContent = originalText;
-        btn.style.opacity = '1';
-        btn.style.pointerEvents = '';
+        restore(buttonLabel);
         return;
       }
       replaceEditorContent(editor, response.text);
       editor.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
-      btn.textContent = '✓ Gotowe';
-      setTimeout(() => {
-        btn.textContent = originalText;
-        btn.style.opacity = '1';
-        btn.style.pointerEvents = '';
-      }, 1400);
+      btn.textContent = '✓ Done';
+      setTimeout(() => restore(buttonLabel), 1400);
     } catch (err) {
       WARN('rewrite exception:', err);
       flash(btn, '❌ ' + (err.message || 'błąd'));
-      btn.textContent = originalText;
-      btn.style.opacity = '1';
-      btn.style.pointerEvents = '';
+      restore(buttonLabel);
     }
   }
 
