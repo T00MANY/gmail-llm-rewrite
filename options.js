@@ -2,7 +2,7 @@ const $ = (id) => document.getElementById(id);
 const DEFAULTS = {
   apiKey: '',
   baseUrl: 'https://api.minimax.io/v1',
-  model: 'MiniMax-M2.5',
+  model: 'MiniMax-M2.7',
   defaultTone: 'professional',
 };
 
