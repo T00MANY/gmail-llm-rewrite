@@ -14,17 +14,18 @@ function buildSystemPrompt(tone, hasDraft) {
   const rules = hasDraft
     ? [
         '- Zachowaj intencję i treść autora. NIE wymyślaj faktów, dat, kwot, zobowiązań, cen ani ustaleń, których nie ma w szkicu.',
-        '- Jeśli dołączona jest poprzednia wiadomość — odnieś się do niej, ale tylko w ramach tego, co autor napisał w szkicu.',
+        '- Jeśli dołączony jest wątek konwersacji — wykorzystaj go jako kontekst (kto co ustalił, o co pytał), ale odpowiedź buduj na podstawie szkicu autora.',
+        '- Wątek jest uporządkowany od najstarszej do najnowszej wiadomości; ostatnia wiadomość to ta, na którą odpowiadasz.',
       ]
     : [
         '- Odpowiedz rzeczowo, krótko, w duchu dobrej obsługi klienta / profesjonalnej korespondencji biznesowej.',
-        '- NIE wymyślaj faktów, ustaleń, kwot, terminów, których nie ma w otrzymanej wiadomości. Jeśli wymagana jest decyzja/informacja której nie znasz — napisz, że zweryfikujesz i wrócisz z odpowiedzią.',
-        '- Odpowiedz na konkretne pytania/prośby zawarte w wiadomości.',
+        '- NIE wymyślaj faktów, ustaleń, kwot, terminów, których nie ma w wątku. Jeśli wymagana jest decyzja/informacja której nie znasz — napisz, że zweryfikujesz i wrócisz z odpowiedzią.',
+        '- Wątek jest uporządkowany od najstarszej do najnowszej wiadomości; odpowiadaj na pytania/prośby z ostatniej wiadomości, uwzględniając wcześniejsze ustalenia.',
       ];
 
   const lang = hasDraft
     ? '- Odpowiedz w tym samym języku co szkic (wykryj automatycznie).'
-    : '- Odpowiedz w tym samym języku co otrzymana wiadomość (wykryj automatycznie).';
+    : '- Odpowiedz w tym samym języku co ostatnia wiadomość w wątku (wykryj automatycznie).';
 
   return `Jesteś asystentem e-mailowym. ${task}
 
@@ -42,7 +43,7 @@ function buildUserMessage({ draft, subject, threadContext }) {
   let s = '';
   if (subject) s += `Temat wątku: ${subject}\n\n`;
   if (threadContext) {
-    s += `=== OTRZYMANA WIADOMOŚĆ (do której odpowiadam) ===\n${threadContext}\n=== KONIEC ===\n\n`;
+    s += `=== WĄTEK KONWERSACJI (od najstarszej do najnowszej) ===\n${threadContext}\n=== KONIEC WĄTKU ===\n\n`;
   }
   if (hasDraft) {
     s += `=== MÓJ SZKIC ODPOWIEDZI (do poprawy) ===\n${draft}\n=== KONIEC SZKICU ===`;
