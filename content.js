@@ -277,30 +277,78 @@
     return (clone.innerText || '').trim();
   }
 
-  function trimContext(text) {
+  function trimContext(text, max = 4000) {
     const t = text.replace(/\n{3,}/g, '\n\n').trim();
-    return t.length > 4000 ? t.slice(0, 4000) + '…' : t;
+    return t.length > max ? t.slice(0, max) + '…' : t;
+  }
+
+  function extractThreadMessages() {
+    const bodies = document.querySelectorAll('.a3s.aiL');
+    const seen = new Set();
+    const messages = [];
+    bodies.forEach(body => {
+      if (seen.has(body)) return;
+      seen.add(body);
+      const wrapper = body.closest('.gs') || body.closest('.adn') || body.closest('[role="listitem"]');
+      let from = '', date = '';
+      if (wrapper) {
+        const senderEl = wrapper.querySelector('.gD');
+        if (senderEl) {
+          from = (senderEl.getAttribute('name') || senderEl.getAttribute('email') || senderEl.textContent || '').trim();
+        }
+        const dateEl = wrapper.querySelector('.g3, span.g3, [data-tooltip-align][data-tooltip]');
+        if (dateEl) {
+          date = (dateEl.getAttribute('title') || dateEl.getAttribute('data-tooltip') || dateEl.textContent || '').trim();
+        }
+      }
+      const cloneBody = body.cloneNode(true);
+      cloneBody.querySelectorAll('.gmail_quote, blockquote, .gmail_quote_container, [data-smartmail="gmail_quote"]').forEach(q => q.remove());
+      let text = readableText(cloneBody).trim();
+      if (!text) text = readableText(body).trim();
+      if (text.length < 5) return;
+      messages.push({ from, date, text });
+    });
+    return messages;
+  }
+
+  function formatThreadMessages(messages, totalBudget = 12000, perMessage = 3500) {
+    if (!messages.length) return '';
+    const capped = messages.map(m => ({
+      from: m.from,
+      date: m.date,
+      text: m.text.length > perMessage ? m.text.slice(0, perMessage) + '…' : m.text,
+    }));
+    const fmt = m => {
+      const header = [m.from, m.date].filter(Boolean).join(' • ') || 'wiadomość';
+      return `--- ${header} ---\n${m.text}`;
+    };
+    let kept = capped.slice();
+    let out = kept.map(fmt).join('\n\n');
+    while (out.length > totalBudget && kept.length > 1) {
+      kept.shift();
+      out = kept.map(fmt).join('\n\n');
+    }
+    if (kept.length < capped.length) {
+      out = `[…pominięto ${capped.length - kept.length} starszych wiadomości z powodu długości…]\n\n` + out;
+    }
+    return out;
   }
 
   function extractThreadContext(container) {
+    const messages = extractThreadMessages();
+    if (messages.length > 0) {
+      LOG(`thread context: ${messages.length} message(s) from rendered thread`);
+      return formatThreadMessages(messages);
+    }
     const inCompose = container.querySelector('.gmail_quote, blockquote, [data-smartmail="gmail_quote"]');
     if (inCompose) {
       const text = readableText(inCompose).trim();
       if (text.length > 20) {
         LOG('thread context from compose quote, len:', text.length);
-        return trimContext(text);
+        return trimContext(text, 8000);
       }
     }
-    const bodies = document.querySelectorAll('.a3s.aiL, .ii.gt div[dir="ltr"], .ii.gt');
-    if (bodies.length > 0) {
-      const last = bodies[bodies.length - 1];
-      const text = (last.innerText || last.textContent || '').trim();
-      if (text.length > 20) {
-        LOG('thread context from last rendered message, len:', text.length);
-        return trimContext(text);
-      }
-    }
-    WARN('no thread context found — nothing in compose quote nor visible messages');
+    WARN('no thread context found — nothing in rendered thread nor compose quote');
     return '';
   }
 
